@@ -2181,6 +2181,61 @@ Report generating algorithm: N/A
 **Assumptions:**
 **Open Issues:**
 
+### **UC-WAR-nudge-non-submitters: The instructor sends a reminder nudge to students who have not submitted their weekly activity report**
+
+**UC ID and Name:** UC-WAR-nudge-non-submitters: Send a reminder nudge to non-submitting students
+**Created By:** Austin Price
+**Date Created:** 2026-10-02
+**Primary Actor:** instructor
+**Secondary Actors:**
+**Trigger:** The instructor, after generating a WAR report for her team and reviewing which students have not submitted (UC-WAR-team-war-report), indicates to send a reminder nudge to one or more of them.
+**Description:** The instructor wants to send a targeted reminder email to specific students who have not submitted their weekly activity report, so that she can follow up outside the scheduled weekly reminder — immediately, selectively, or with context the automated reminder does not have.
+
+**Preconditions:**
+- PRE-1. The instructor is logged into the system.
+- PRE-2. The instructor is assigned to the course section containing the team (BR-section-scoped-access).
+- PRE-3. The instructor has generated a WAR report for the team and week via UC-WAR-team-war-report, which has identified the non-submitting students for that week.
+
+**Postconditions:**
+- POST-1. A reminder email has been sent to each selected student for whom the send succeeded.
+- POST-2. The system has recorded the nudge (student, week, timestamp) for each student successfully nudged.
+
+**Main Success Scenario:**
+1. The instructor indicates to send a nudge to one or more non-submitting students from the list produced by a WAR report (UC-WAR-team-war-report) for a team and week.
+2. The system displays the non-submitter list from that report and asks the instructor to select which students to nudge.
+3. The instructor selects one or more students and confirms.
+4. The system validates each selected student is eligible to be nudged according to the "Details" defined in the Associated Information of this use case.
+5. The system sends a reminder email to each eligible selected student and records the nudge (student, week, timestamp).
+6. The system informs the instructor how many nudges were sent successfully and names any that failed.
+7. Use case ends.
+
+**Extensions:**
+- **2a. No students appear in the non-submitter list (every student has submitted):**
+  - 2a1. The system informs the instructor there is nothing to nudge and does not offer the nudge action.
+  - 2a2. Use case ends.
+- **3a. The instructor selects a student who is not assigned to a team:**
+  - 3a1. The system excludes her from the nudge and informs the instructor that she cannot be nudged because she is not assigned to a team and so cannot submit a weekly activity report (BR-team-assignment-required).
+- **4a. A selected student was already nudged for this week within the cooldown period (BR-nudge-cooldown):**
+  - 4a1. The system does not resend to that student, tells the instructor when she will next be eligible, and proceeds with the remaining selected students.
+- **5a. The mail server rejects a selected student's address:**
+  - 5a1. The system logs the failure for that student, continues sending to the remaining selected students, and reports the failure to the instructor in step 6 (consistent with the existing weekly scheduler's handling of a rejected address).
+
+**Priority:** High
+**Frequency of Use:** Approximately 2 users (instructors) per course section, a few usages per week.
+**Business Rules:** BR-section-scoped-access (an instructor nudges only within a team in a course section she is assigned to), BR-team-assignment-required (a teamless student cannot submit a WAR and so is not a valid nudge target), BR-active-weeks (a weekly activity report may be submitted regardless of the active-weeks window, so a nudge is never withheld on the basis of a closed submission window), BR-nudge-cooldown (limits repeat nudges to the same student).
+
+**Associated Information:**
+- This use case acts on the non-submitter list produced by UC-WAR-team-war-report; it does not independently validate the team, the week, or which students appear on that list — that validation belongs to the report that generates it.
+- Details: "Has not submitted," for purposes of this list, means no Activity record exists for that student for the week in question. The system has no way to know whether a student considers her weekly activity log for the week complete, so a partial log (at least one Activity record) is treated as a submission and that student does not appear in the non-submitter list.
+- Because BR-active-weeks permits a late WAR submission regardless of the active-weeks window, there is no closed submission window for a weekly activity report the way there is for a peer evaluation (BR-evaluation-submission-window); a nudge is therefore always potentially useful and is never withheld on timing grounds.
+- A student who submitted an activity and later deleted it is evaluated against the same "no Activity record" test at the moment the report (and any nudge drawn from it) is generated, so she is correctly treated as a non-submitter if her week is empty at that time.
+- The manual nudge exists alongside the corrected automatic weekly scheduler (FR-NOT-weekly-reminder) because the scheduler sends a uniform, schedule-bound reminder to every outstanding student, while the nudge lets the instructor act with judgment outside that schedule — immediately rather than waiting for the next scheduled run, selectively rather than to everyone, or in response to context the system has no way to know (for example, a student who has already explained a delay directly to the instructor).
+- Nudge emails reuse the reminder email mechanism already used by the weekly scheduler (FR-NOT-weekly-reminder), personalized to the specific student and week.
+
+**Related Use Cases:** UC-WAR-team-war-report: Generate a WAR report of a team (precondition; produces the non-submitter list this use case acts on).
+**Assumptions:**
+**Open Issues:**
+
 ## **Peer Evaluation**
 
 ### **UC-EVA-submit-evaluation: The student submits a peer evaluation for the previous week**
