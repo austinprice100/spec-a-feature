@@ -2205,7 +2205,7 @@ Report generating algorithm: N/A
 2. The system displays the non-submitter list from that report and asks the instructor to select which students to nudge.
 3. The instructor selects one or more students and confirms.
 4. The system re-checks each selected student's eligibility at send time — no Activity record for the week, current team membership, and the cooldown (BR-nudge-cooldown) — since any of these can have changed since the report was generated.
-5. The system sends a reminder email to each eligible selected student and records the nudge (student, week, timestamp).
+5. The system sends a reminder email to each eligible selected student and records the nudge (student, week, sender, timestamp).
 6. The system informs the instructor how many nudges were sent successfully and names any that failed.
 7. Use case ends.
 
@@ -2215,13 +2215,15 @@ Report generating algorithm: N/A
 - **3a. A selected student was removed from the team after the report was generated but before the nudge was sent:**
   - 3a1. The system excludes her from the nudge at the step 4 re-check and informs the instructor that she is no longer on this team (BR-team-assignment-required).
 - **4a. A selected student was already nudged for this week within the cooldown period (BR-nudge-cooldown):**
-  - 4a1. The system does not resend to that student, tells the instructor when she will next be eligible, and proceeds with the remaining selected students.
+  - 4a1. The system does not resend to that student, tells the sender when she will next be eligible, and proceeds with the remaining selected students.
+- **4b. A selected student submitted an Activity record for the week after the report was generated but before the nudge was sent:**
+  - 4b1. The system excludes her from the nudge at the step 4 re-check and informs the instructor that she has since submitted.
 - **5a. The mail server rejects a selected student's address:**
   - 5a1. The system logs the failure for that student, continues sending to the remaining selected students, and reports the failure to the instructor in step 6 (consistent with the existing weekly scheduler's handling of a rejected address).
 
 **Priority:** High
 **Frequency of Use:** Approximately 2 users (instructors) per course section, a few usages per week.
-**Business Rules:** BR-section-scoped-access (an instructor nudges only within a team in a course section she is assigned to), BR-team-assignment-required (a teamless student cannot submit a WAR and so is not a valid nudge target), BR-active-weeks (a weekly activity report may be submitted regardless of the active-weeks window, so a nudge is never withheld on the basis of a closed submission window), BR-nudge-cooldown (limits repeat nudges to the same student).
+**Business Rules:** BR-section-scoped-access (an instructor nudges only within a team in a course section she is assigned to), BR-team-assignment-required (a student removed from the team between the report and the nudge is no longer a valid target, per extension 3a), BR-active-weeks (a weekly activity report may be submitted regardless of the active-weeks window, so a nudge is never withheld on the basis of a closed submission window), BR-nudge-cooldown (limits repeat nudges to the same student, regardless of sender).
 
 **Associated Information:**
 - This use case relies on UC-WAR-team-war-report for the team and week parameters and for producing the initial non-submitter list; it does not re-validate those. It does, however, re-check each selected student's individual eligibility at send time (step 4), since a student's submission status, team membership, or cooldown state can change in the time between generating the report and sending the nudge.
